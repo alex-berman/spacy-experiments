@@ -20,7 +20,9 @@ class SpacyModelAnalyzer:
         d_vector = self._word_vector(token_string_b) - self._word_vector(token_string_a) + \
                    self._word_vector(token_string_c)
         c_orth = self.nlp(token_string_c)[0].orth
-        words_to_consider = [word for word in self.nlp.vocab if word.orth != c_orth]
+        words_to_consider = [
+            word for word in self.nlp.vocab
+            if word.orth != c_orth and word.orth_.islower()]
         by_similarity = sorted(
             words_to_consider, key=lambda word: similarity(word.vector, d_vector), reverse=True)
         return [(word.orth_, similarity(word.vector, d_vector), word.prob)
