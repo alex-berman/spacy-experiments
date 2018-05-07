@@ -30,3 +30,13 @@ class SpacyModelAnalyzer:
 
     def _word_vector(self, string):
         return self.nlp(string)[0].vector
+
+    def find_by_similarity(self, token_string, num_results=10):
+        vector = self._word_vector(token_string)
+        words_to_consider = [
+            word for word in self.nlp.vocab
+            if word.orth_.islower()]
+        by_similarity = sorted(
+            words_to_consider, key=lambda word: similarity(word.vector, vector), reverse=True)
+        return [(word.orth_, similarity(word.vector, vector), word.prob)
+                for word in by_similarity[:num_results]]
