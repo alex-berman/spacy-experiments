@@ -15,5 +15,5 @@ result = analyzer.find_by_analogy(u"man", u"king", u"woman")
 pprint.pprint(result)
 
 print "Interpolating..."
-result = analyzer.interpolate(u"happy", u"sad", num_steps=3)
+result = analyzer.interpolate_linear(u"happy", u"sad", num_steps=3)
 pprint.pprint(result)
