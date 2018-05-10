@@ -1,8 +1,8 @@
-import scipy.spatial.distance
+from scipy.spatial import distance
 import math
 
 def similarity(v1, v2):
-    cosine_distance = scipy.spatial.distance.cosine(v1, v2)
+    cosine_distance = distance.cosine(v1, v2)
     if math.isnan(cosine_distance):
         return 0
     else:
@@ -93,3 +93,35 @@ class SpacyModelAnalyzer:
             current_orth = word.orth
             current_vector = word.vector
         return results
+
+    def compare_distance_metrics(self, w1, rank_threshold=100):
+        token1 = self.token(w1)
+        v1 = token1.vector
+        orth1 = token1.orth
+        lexemes_to_consider = [
+            lexeme for lexeme in self.nlp.vocab
+            if lexeme.has_vector and lexeme.orth != orth1]
+
+        by_cosine = sorted(
+            lexemes_to_consider, key=lambda lexeme: distance.cosine(v1, lexeme.vector))
+        cosine_ranks = {}
+        for index, lexeme in enumerate(by_cosine):
+            cosine_ranks[lexeme.orth] = index
+    
+        by_euclidean = sorted(
+            lexemes_to_consider, key=lambda lexeme: distance.euclidean(v1, lexeme.vector))
+        euclidean_ranks = {}
+        for index, lexeme in enumerate(by_euclidean):
+            euclidean_ranks[lexeme.orth] = index
+
+        def rank_difference(lexeme):
+            return abs(cosine_ranks[lexeme.orth] - euclidean_ranks[lexeme.orth])
+
+        by_disagreement = sorted(lexemes_to_consider, key=rank_difference, reverse=True)
+        for lexeme in by_disagreement:
+            cosine_rank = cosine_ranks[lexeme.orth]
+            euclidean_rank = euclidean_ranks[lexeme.orth]
+            if cosine_rank < rank_threshold and euclidean_rank >= rank_threshold or \
+               euclidean_rank < rank_threshold and cosine_rank >= rank_threshold:
+                yield lexeme, cosine_rank, distance.cosine(v1, lexeme.vector), \
+                    euclidean_rank, distance.euclidean(v1, lexeme.vector)
