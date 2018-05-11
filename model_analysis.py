@@ -1,12 +1,26 @@
 from scipy.spatial import distance
 import math
 
-def similarity(v1, v2):
-    cosine_distance = distance.cosine(v1, v2)
-    if math.isnan(cosine_distance):
+COSINE = "cosine"
+EUCLIDEAN = "euclidean"
+
+def similarity(v1, v2, metric=COSINE):
+    if metric == COSINE:
+        return cosine_distance(v1, v2)
+    elif metric == EUCLIDEAN:
+        return -euclidean_distance(v1, v2)
+    else:
+        raise Exception("Unsupported metric %r" % metric)
+
+def cosine_distance(v1, v2):
+    d = distance.cosine(v1, v2)
+    if math.isnan(d):
         return 0
     else:
-        return 1 - cosine_distance
+        return 1 - d
+
+def euclidean_distance(v1, v2):
+    return distance.euclidean(v1, v2)
 
 class SpacyModelAnalyzer:
     def __init__(self, nlp):
@@ -34,14 +48,16 @@ class SpacyModelAnalyzer:
     def token(self, string):
         return self.nlp(string)[0]
 
-    def find_by_similarity(self, token_string, num_results=10):
+    def find_by_similarity(self, token_string, metric=COSINE, num_results=10):
         vector = self.word_vector(token_string)
         words_to_consider = [
             word for word in self.nlp.vocab
             if word.orth_.islower()]
         by_similarity = sorted(
-            words_to_consider, key=lambda word: similarity(word.vector, vector), reverse=True)
-        return [(word.orth_, similarity(word.vector, vector), word.prob)
+            words_to_consider,
+            key=lambda word: similarity(word.vector, vector, metric),
+            reverse=True)
+        return [(word.orth_, similarity(word.vector, vector, metric), word.prob)
                 for word in by_similarity[:num_results]]
 
     def interpolate_linear(self, token_string_a, token_string_b, num_steps=3):
