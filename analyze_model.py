@@ -4,7 +4,7 @@ import pprint
 from prettytable import PrettyTable
 
 print "Loading model..."
-nlp = spacy.load("en_core_web_md")
+nlp = spacy.load("en_core_web_md", disable=["parser"])
 analyzer = model_analysis.SpacyModelAnalyzer(nlp)
 
 print "Analyzing similarity..."
